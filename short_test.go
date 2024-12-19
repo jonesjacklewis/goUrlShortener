@@ -4,11 +4,16 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
 
 func TestShort(t *testing.T) {
+
+	// if test.db exists, delete it before running tests
+	deleteDatabase("test.db")
+
 	t.Run("Should convert a URL to a hash string", func(t *testing.T) {
 		url_str := "https://www.google.com"
 		shortened := short(url_str)
@@ -277,4 +282,78 @@ func TestShort(t *testing.T) {
 		}
 	})
 
+	t.Run("Given invalid database path should return false", func(t *testing.T) {
+		path := "/invalid/path/to/database.db"
+
+		result := addHash(path, "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8=", "https://www.google.com/")
+
+		if result {
+			t.Errorf("addHash() = %t; want false", result)
+		}
+	})
+
+	t.Run("Given empty/whitespace hash should return false", func(t *testing.T) {
+		path := "test.db"
+
+		result := addHash(path, "    ", "https://www.google.com/")
+
+		if result {
+			t.Errorf("addHash() = %t; want false", result)
+		}
+	})
+
+	t.Run("Given invalid target should return false", func(t *testing.T) {
+		path := "test.db"
+
+		result := addHash(path, "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8=", "    ")
+
+		if result {
+			t.Errorf("addHash() = %t; want false", result)
+		}
+	})
+
+	t.Run("Given valid target, hash, and path should return true", func(t *testing.T) {
+		path := "test.db"
+		valid_hash := "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8="
+		valid_url := "https://www.google.com"
+
+		result := addHash(path, valid_hash, valid_url)
+
+		if !result {
+			t.Errorf("addHash() = %t; want true", result)
+		}
+	})
+
+	t.Run("Adding a duplicate hash should result in an error", func(t *testing.T) {
+		path := "test.db"
+		valid_hash := "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8="
+		valid_url := "https://www.google.com"
+
+		addHash(path, valid_hash, valid_url)
+
+		result := addHash(path, valid_hash, valid_url)
+
+		if result {
+			t.Errorf("addHash() = %t; want false", result)
+		}
+	})
+}
+
+func deleteDatabase(fn string) {
+	// delete test.db if it exists
+	err := deleteFile(fn)
+
+	if err != nil {
+		fmt.Println("Error deleting test.db")
+	}
+}
+
+func deleteFile(fn string) error {
+	err := os.Remove(fn)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

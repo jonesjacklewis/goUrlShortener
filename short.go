@@ -13,9 +13,50 @@ import (
 )
 
 var knownHashes map[string]string = make(map[string]string)
+var filename string = "short.db"
 
-func createDatabase(filename string) bool {
-	db, err := sql.Open("sqlite3", filename)
+func addHash(path string, hash string, target string) bool {
+	if !createDatabase(path) {
+		return false
+	}
+
+	db, err := sql.Open("sqlite3", path)
+
+	if err != nil {
+		return false
+	}
+
+	defer db.Close()
+
+	hash = strings.TrimSpace(hash)
+
+	if len(hash) == 0 {
+		return false
+	}
+
+	if !isValidUrl(target) {
+		return false
+	}
+
+	insertQuerySql := `
+	INSERT INTO
+	urls (
+		hash,
+		url
+	)
+	VALUES (
+		?,
+		?
+	);
+	`
+
+	_, err = db.Exec(insertQuerySql, hash, target)
+
+	return err == nil
+}
+
+func createDatabase(fn string) bool {
+	db, err := sql.Open("sqlite3", fn)
 
 	if err != nil {
 		return false
@@ -30,7 +71,7 @@ func createDatabase(filename string) bool {
 		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 		hash TEXT NOT NULL UNIQUE,
 		url TEXT NOT NULL
-	)
+	);
 	`
 
 	_, err = db.Exec(createTableSql)
@@ -40,7 +81,6 @@ func createDatabase(filename string) bool {
 
 func isValidUrl(toTest string) bool {
 	_, err := url.ParseRequestURI(toTest)
-
 	return err == nil
 }
 
@@ -52,7 +92,7 @@ func short(url string) string {
 
 	hash := base64.StdEncoding.EncodeToString([]byte(url))
 
-	knownHashes[hash] = url
+	addHash(filename, hash, url)
 
 	return hash
 }
@@ -120,7 +160,7 @@ func longHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	createDatabase("short.db")
+	createDatabase(filename)
 	http.HandleFunc("/shorten", shortenHandler)
 	http.HandleFunc("/long/", longHandler)
 	http.ListenAndServe(":8080", nil)
