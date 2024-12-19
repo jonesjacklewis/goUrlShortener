@@ -259,4 +259,22 @@ func TestShort(t *testing.T) {
 
 	})
 
+	t.Run("Given an invalid path, createDatabase should return false", func(t *testing.T) {
+		path := "/invalid/path/to/database.db"
+		result := createDatabase(path)
+
+		if result {
+			t.Errorf("createDatabase() = %t; want false", result)
+		}
+	})
+
+	t.Run("Given a valid path, createDatabase should return true", func(t *testing.T) {
+		path := "test.db"
+		result := createDatabase(path)
+
+		if !result {
+			t.Errorf("createDatabase() = %t; want true", result)
+		}
+	})
+
 }

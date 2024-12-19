@@ -1,15 +1,42 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var knownHashes map[string]string = make(map[string]string)
+
+func createDatabase(filename string) bool {
+	db, err := sql.Open("sqlite3", filename)
+
+	if err != nil {
+		return false
+	}
+
+	defer db.Close()
+
+	createTableSql := `
+	CREATE TABLE
+	IF NOT EXISTS
+	urls (
+		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		hash TEXT NOT NULL UNIQUE,
+		url TEXT NOT NULL
+	)
+	`
+
+	_, err = db.Exec(createTableSql)
+
+	return err == nil
+}
 
 func isValidUrl(toTest string) bool {
 	_, err := url.ParseRequestURI(toTest)
@@ -93,6 +120,7 @@ func longHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	createDatabase("short.db")
 	http.HandleFunc("/shorten", shortenHandler)
 	http.HandleFunc("/long/", longHandler)
 	http.ListenAndServe(":8080", nil)
