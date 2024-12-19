@@ -25,3 +25,23 @@ Shortens a URL.
     "short": "http://localhost:8080/long/aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8="
 }
 ```
+
+### GET /long/{short}
+
+Redirects to the original URL.
+
+#### Request
+
+```
+GET /long/aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8=
+```
+
+#### Response
+
+Redirects to `https://www.google.com`.
+
+## Running
+
+```bash
+go run short.go
+```
