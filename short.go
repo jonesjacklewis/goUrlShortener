@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 var knownHashes map[string]string = make(map[string]string)
@@ -56,7 +57,27 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+func longHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Invalid Method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	hash := r.URL.Path
+	hash = strings.TrimPrefix(hash, "/long/")
+
+	url := Long(hash)
+
+	if url == "N/a" {
+		http.Error(w, "Invalid hash", http.StatusNotFound)
+		return
+	}
+
+	http.Redirect(w, r, url, 301)
+}
+
 func main() {
 	http.HandleFunc("/shorten", shortenHandler)
+	http.HandleFunc("/long/", longHandler)
 	http.ListenAndServe(":8080", nil)
 }
