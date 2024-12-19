@@ -5,12 +5,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
 var knownHashes map[string]string = make(map[string]string)
 
-func Short(url string) string {
+func isValidUrl(toTest string) bool {
+	_, err := url.ParseRequestURI(toTest)
+
+	return err == nil
+}
+
+func short(url string) string {
 
 	hash := base64.StdEncoding.EncodeToString([]byte(url))
 
@@ -19,7 +26,7 @@ func Short(url string) string {
 	return hash
 }
 
-func Long(hash string) string {
+func long(hash string) string {
 	val, ok := knownHashes[hash]
 
 	if !ok {
@@ -49,7 +56,7 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash := Short(val)
+	hash := short(val)
 
 	resp := map[string]string{"short": fmt.Sprintf("http://localhost:8080/long/%s", hash)}
 	w.Header().Set("Content-Type", "application/json")
@@ -66,7 +73,7 @@ func longHandler(w http.ResponseWriter, r *http.Request) {
 	hash := r.URL.Path
 	hash = strings.TrimPrefix(hash, "/long/")
 
-	url := Long(hash)
+	url := long(hash)
 
 	if url == "N/a" {
 		http.Error(w, "Invalid hash", http.StatusNotFound)
