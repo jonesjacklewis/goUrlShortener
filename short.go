@@ -52,7 +52,7 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	hash := Short(val)
 
 	resp := map[string]string{"short": fmt.Sprintf("http://localhost:8080/long/%s", hash)}
-	w.Header().Set("Content-Type", "application.json")
+	w.Header().Set("Content-Type", "application/json")
 
 	json.NewEncoder(w).Encode(resp)
 }
