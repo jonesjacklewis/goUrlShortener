@@ -251,9 +251,9 @@ func TestShort(t *testing.T) {
 			t.Errorf("longHandler() = %d; want %d", resp.StatusCode, http.StatusPermanentRedirect)
 		}
 
-		redirectTarget := resp.Header.Get("Header")
+		redirectTarget := resp.Header.Get("Location")
 
-		if !(strings.Contains(redirectTarget, target) || strings.Contains(target, redirectTarget)) {
+		if redirectTarget != target {
 			t.Errorf("longHandler() = %s; want %s", redirectTarget, target)
 		}
 
