@@ -1,14 +1,13 @@
 package main
 
-import "crypto/sha256"
+import (
+	"encoding/base64"
+	"fmt"
+)
 
 func Short(url string) string {
 
-	h := sha256.New()
-
-	h.Write([]byte(url))
-
-	hash := string(h.Sum(nil)[:])
+	hash := base64.StdEncoding.EncodeToString([]byte(url))
 
 	return hash
 }
@@ -16,5 +15,5 @@ func Short(url string) string {
 func main() {
 	hash := Short("https://www.google.com")
 
-	println(hash)
+	fmt.Println(hash)
 }
