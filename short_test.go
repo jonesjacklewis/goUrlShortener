@@ -337,6 +337,50 @@ func TestShort(t *testing.T) {
 			t.Errorf("addHash() = %t; want false", result)
 		}
 	})
+
+	t.Run("Given invalid database path should return false", func(t *testing.T) {
+		path := "/invalid/path/to/database.db"
+
+		result := getTargetByHash(path, "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8=")
+
+		if result != "N/a" {
+			t.Errorf("getTargetByHash() = %s; want N/a", result)
+		}
+	})
+
+	t.Run("Given empty/whitespace hash should return false", func(t *testing.T) {
+		path := "test.db"
+
+		result := getTargetByHash(path, "    ")
+
+		if result != "N/a" {
+			t.Errorf("getTargetByHash() = %s; want N/a", result)
+		}
+	})
+
+	t.Run("Given hash not in database should return N/a", func(t *testing.T) {
+		path := "test.db"
+
+		result := getTargetByHash(path, "hello")
+
+		if result != "N/a" {
+			t.Errorf("getTargetByHash() = %s; want N/a", result)
+		}
+	})
+
+	t.Run("Given hash in database should return url", func(t *testing.T) {
+		path := "test.db"
+		valid_hash := "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8="
+		valid_url := "https://www.google.com"
+
+		addHash(path, valid_hash, valid_url)
+
+		result := getTargetByHash(path, valid_hash)
+
+		if result != valid_url {
+			t.Errorf("getTargetByHash() = %s; want %s", result, valid_url)
+		}
+	})
 }
 
 func deleteDatabase(fn string) {

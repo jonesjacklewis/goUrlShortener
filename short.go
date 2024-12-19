@@ -15,6 +15,30 @@ import (
 var knownHashes map[string]string = make(map[string]string)
 var filename string = "short.db"
 
+func createDatabase(fn string) bool {
+	db, err := sql.Open("sqlite3", fn)
+
+	if err != nil {
+		return false
+	}
+
+	defer db.Close()
+
+	createTableSql := `
+	CREATE TABLE
+	IF NOT EXISTS
+	urls (
+		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		hash TEXT NOT NULL UNIQUE,
+		url TEXT NOT NULL
+	);
+	`
+
+	_, err = db.Exec(createTableSql)
+
+	return err == nil
+}
+
 func addHash(path string, hash string, target string) bool {
 	if !createDatabase(path) {
 		return false
@@ -55,28 +79,45 @@ func addHash(path string, hash string, target string) bool {
 	return err == nil
 }
 
-func createDatabase(fn string) bool {
-	db, err := sql.Open("sqlite3", fn)
-
-	if err != nil {
-		return false
+func getTargetByHash(path string, hash string) string {
+	if !createDatabase(path) {
+		return "N/a"
 	}
 
-	defer db.Close()
+	db, err := sql.Open("sqlite3", path)
 
-	createTableSql := `
-	CREATE TABLE
-	IF NOT EXISTS
-	urls (
-		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-		hash TEXT NOT NULL UNIQUE,
-		url TEXT NOT NULL
-	);
+	if err != nil {
+		return "N/a"
+	}
+
+	hash = strings.TrimSpace(hash)
+
+	if len(hash) == 0 {
+		return "N/a"
+	}
+
+	selectUrlByHashSql := `
+	SELECT
+	url
+	FROM
+	urls
+	WHERE
+	hash = ?
+	LIMIT 1;
 	`
 
-	_, err = db.Exec(createTableSql)
+	rows, err := db.Query(selectUrlByHashSql, hash)
+	defer rows.Close()
 
-	return err == nil
+	var url string
+
+	for rows.Next() {
+		rows.Scan(&url)
+
+		return url
+	}
+
+	return "N/a"
 }
 
 func isValidUrl(toTest string) bool {
@@ -98,13 +139,9 @@ func short(url string) string {
 }
 
 func long(hash string) string {
-	val, ok := knownHashes[hash]
+	url := getTargetByHash(filename, hash)
 
-	if !ok {
-		return "N/a"
-	}
-
-	return val
+	return url
 }
 
 func shortenHandler(w http.ResponseWriter, r *http.Request) {
