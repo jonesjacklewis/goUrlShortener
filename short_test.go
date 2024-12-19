@@ -33,4 +33,23 @@ func TestShort(t *testing.T) {
 
 	})
 
+	t.Run("Given a known hash, should be able to get the url", func(t *testing.T) {
+		url_str := "https://www.google.com"
+		shortened := Short(url_str)
+
+		long_form := Long(shortened)
+
+		if long_form != url_str {
+			t.Errorf("Long() = %s; want %s", long_form, url_str)
+		}
+	})
+
+	t.Run("Given an unknown hash, should return 'N/a' as a literal string", func(t *testing.T) {
+		long_form := Long("helloWorld")
+
+		if long_form != "N/a" {
+			t.Errorf("Long() = %s; want N/a", long_form)
+		}
+	})
+
 }
