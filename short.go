@@ -49,14 +49,14 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	var req map[string]string
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+		http.Error(w, "Invalid Input", http.StatusBadRequest)
 		return
 	}
 
 	val, ok := req["url"]
 
 	if !ok {
-		http.Error(w, "Missing url parameter", http.StatusBadRequest)
+		http.Error(w, "Missing Url Parameter", http.StatusBadRequest)
 		return
 	}
 
