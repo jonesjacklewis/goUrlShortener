@@ -33,6 +33,15 @@ func TestShort(t *testing.T) {
 
 	})
 
+	t.Run("An invalid url should return a 'N/a' as a literal string", func(t *testing.T) {
+		url_str := "hello world"
+		shortened := short(url_str)
+
+		if shortened != "N/a" {
+			t.Errorf("Short() = %s; want 'N/a'", shortened)
+		}
+	})
+
 	t.Run("Given a known hash, should be able to get the url", func(t *testing.T) {
 		url_str := "https://www.google.com"
 		shortened := short(url_str)

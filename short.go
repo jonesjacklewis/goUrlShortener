@@ -19,6 +19,10 @@ func isValidUrl(toTest string) bool {
 
 func short(url string) string {
 
+	if !isValidUrl(url) {
+		return "N/a"
+	}
+
 	hash := base64.StdEncoding.EncodeToString([]byte(url))
 
 	knownHashes[hash] = url
@@ -57,6 +61,11 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hash := short(val)
+
+	if hash == "N/a" {
+		http.Error(w, fmt.Sprintf("%s is an invalid URL", val), http.StatusBadRequest)
+		return
+	}
 
 	resp := map[string]string{"short": fmt.Sprintf("http://localhost:8080/long/%s", hash)}
 	w.Header().Set("Content-Type", "application/json")
