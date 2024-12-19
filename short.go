@@ -85,11 +85,11 @@ func longHandler(w http.ResponseWriter, r *http.Request) {
 	url := long(hash)
 
 	if url == "N/a" {
-		http.Error(w, "Invalid hash", http.StatusNotFound)
+		http.Error(w, "Invalid Hash", http.StatusNotFound)
 		return
 	}
 
-	http.Redirect(w, r, url, 301)
+	http.Redirect(w, r, url, http.StatusPermanentRedirect)
 }
 
 func main() {

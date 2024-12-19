@@ -195,4 +195,68 @@ func TestShort(t *testing.T) {
 
 	})
 
+	t.Run("Given none GET request on /long/, should return error", func(t *testing.T) {
+		w := httptest.NewRecorder()
+
+		r := httptest.NewRequest(http.MethodPost, "/long/", nil)
+
+		longHandler(w, r)
+
+		resp := w.Result()
+
+		if resp.StatusCode != http.StatusMethodNotAllowed {
+			t.Errorf("longHandler() = %d; want %d", resp.StatusCode, http.StatusMethodNotAllowed)
+		}
+
+		// check error message
+		expectedMessage := "Invalid Method"
+		if !strings.Contains(w.Body.String(), expectedMessage) {
+			t.Errorf("longHandler() = %s; want %s", w.Body.String(), expectedMessage)
+		}
+	})
+
+	t.Run("Given unseen hash on /long/ should return erorr", func(t *testing.T) {
+		w := httptest.NewRecorder()
+
+		r := httptest.NewRequest(http.MethodGet, "/long/hello-world", nil)
+
+		longHandler(w, r)
+
+		resp := w.Result()
+
+		if resp.StatusCode != http.StatusNotFound {
+			t.Errorf("longHandler() = %d; want %d", resp.StatusCode, http.StatusNotFound)
+		}
+
+		// check error message
+		expectedMessage := "Invalid Hash"
+		if !strings.Contains(w.Body.String(), expectedMessage) {
+			t.Errorf("longHandler() = %s; want %s", w.Body.String(), expectedMessage)
+		}
+	})
+
+	t.Run("Given seen hash on /long/ should redirect to a url", func(t *testing.T) {
+		w := httptest.NewRecorder()
+
+		target := "https://www.google.com/"
+		hash := short(target)
+
+		r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/long/%s", hash), nil)
+
+		longHandler(w, r)
+
+		resp := w.Result()
+
+		if resp.StatusCode != http.StatusPermanentRedirect {
+			t.Errorf("longHandler() = %d; want %d", resp.StatusCode, http.StatusPermanentRedirect)
+		}
+
+		redirectTarget := resp.Header.Get("Header")
+
+		if !(strings.Contains(redirectTarget, target) || strings.Contains(target, redirectTarget)) {
+			t.Errorf("longHandler() = %s; want %s", redirectTarget, target)
+		}
+
+	})
+
 }
